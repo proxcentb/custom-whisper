@@ -1,0 +1,138 @@
+<html lang="en">
+  <head>
+    <style>
+      .data-block {
+        border-radius: 10px;
+        padding: 5px 30px;
+        margin-bottom: 10px;
+        max-width: 45vw;
+      }
+      .highlighted {
+        background: #5f5353;
+        border-radius: 5px;
+      }
+      .word {
+        display: inline-block;
+      }
+      .input-file {
+        display: flex;
+      }
+      .input-file span {
+        cursor: pointer;
+        color: rgb(255 255 255);
+        background-color: #419152;
+        padding: 10px 20px;
+        text-align: center;
+        width: 50vw;
+      }
+      .input-file input[type=file] {
+        width: 0;
+        height: 0;
+      }
+      .input-file:hover span {
+        background-color: #59be6e;
+      }
+      #player {
+        width: 45vw; 
+        position: sticky; 
+        float: right; 
+        top: 20px; 
+        padding: 5px 30px; 
+        box-sizing: border-box;
+      }
+      #dialog {
+        display: inline-block;
+      }
+    </style>
+    <script>
+      const jumptoTime = () => document.getElementById('player').currentTime = Number(event.target.id);
+
+      const onInputJSON = event => {
+        const reader = new FileReader();
+        reader.readAsText(event.target.files[0], "UTF-8");
+        reader.onload = e => setDialog(JSON.parse(e.target.result))
+      }
+      const setDialog = async (json) => {
+        const speakersConfigMap = {};
+        for (let i = 0; i < 50; i++) {
+          speakersConfigMap[`SPEAKER_${String(i).padStart(2, '0')}`] = {
+            speaker: `Speaker ${i}`,
+            boxColor: ['white', '#e2eef2', '#f2f7d2', '#f7d6d2', '#f2e2ef'][i % 5],
+          }
+        }
+
+        let prevSpeaker = '';
+        let lastExistingSpeaker = 0;
+        let lastExistingWordScore = 0;
+        let lastExistingWordStart = 0;
+        const dialogNode = document.createElement('div');
+        dialogNode.id = 'dialog';
+        dialogNode.style.display = 'inline-block';
+        for (const { words, speaker: rawSpeaker } of json.segments) {
+          if (rawSpeaker !== undefined) lastExistingSpeaker = rawSpeaker;
+          if (prevSpeaker !== lastExistingSpeaker) {
+            const { speaker, boxColor } = speakersConfigMap[lastExistingSpeaker];
+            dialogNode.insertAdjacentHTML("beforeend", `
+              <div class="data-block" style="background-color: ${boxColor}">
+                <span style="color: #454545">${speaker}</span>
+                <br>
+              </div>
+            `);
+
+            prevSpeaker = lastExistingSpeaker;
+          }
+
+          for ({ start, word, score } of words) {
+            if (start !== undefined) {
+              lastExistingWordStart = start;
+              lastExistingWordScore = score;
+            }
+            dialogNode.lastElementChild.insertAdjacentHTML("beforeend", `<a class="word" style="color: hsl(${lastExistingWordScore * 100},50%,50%);" id="${lastExistingWordStart}" onclick="jumptoTime()">${word}</a> `);
+          }
+        }
+
+        document.getElementById('dialog').replaceWith(dialogNode);
+      }
+
+      let highlightedElement = null;
+      const updateBg = (time) => {
+        const words = Array.from(document.querySelectorAll('a'));
+        for (let i = 0; i < words.length; i++) {
+          const el = words[i];
+          if (highlightedElement !== el && el.id && Number(el.id) > Number(time)) {
+            if (highlightedElement) highlightedElement.classList.remove('highlighted')
+            highlightedElement = words[i - 1];
+            highlightedElement.classList.add('highlighted')
+            break;
+          }
+        }
+      }
+
+      const onInputVideo = event => setMedia(URL.createObjectURL(event.target.files[0]));
+      const setMedia = (media) => {
+        const prevNode = document.getElementById("player");
+        const nextNode = document.createElement(['mpg', 'mp2', 'mpeg', 'mpe', 'mpv', 'mp4'].includes(media?.name?.split('.').at(-1) ?? media.split('.').at(-1)) ? 'video' : 'audio');
+        nextNode.id = prevNode.id;
+        nextNode.src = media;
+        nextNode.controls = true;
+        nextNode.ontimeupdate = prevNode.ontimeupdate;
+        prevNode.replaceWith(nextNode);
+      }
+    </script>
+  </head>
+  <body style="font-family: sans-serif; font-size: 18px; background-color: #efe7dd; margin: 0">
+    <div style="display: flex; flex-direction: row; justify-content: space-between">
+      <label class="input-file data-block">
+        <input type="file" onchange="onInputJSON(event)" accept=".json">		
+        <span>Select JSON file</span>
+      </label>
+      <label class="input-file data-block">
+        <input type="file" onchange="onInputVideo(event)" accept="audio/*,video/*">		
+        <span>Select video/audio file</span>
+      </label>
+    </div>
+    <div id="dialog"></div>
+    <div id="player" ontimeupdate="updateBg(this.currentTime)"></div>
+    <script>// python replace</script>
+  </body>
+</html>
