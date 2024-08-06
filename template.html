@@ -83,11 +83,13 @@
           }
 
           for ({ start, word, score } of words) {
+            if (word[0] == '[') continue;
+            
             if (start !== undefined) {
               lastExistingWordStart = start;
               lastExistingWordScore = score;
             }
-            dialogNode.lastElementChild.insertAdjacentHTML("beforeend", `<a class="word" style="color: hsl(${lastExistingWordScore * 100},50%,50%);" id="${lastExistingWordStart}" onclick="jumptoTime()">${word}</a> `);
+            dialogNode.lastElementChild.insertAdjacentHTML("beforeend", `<a class="word" style="white-space: pre; color: hsl(${lastExistingWordScore * 100},50%,50%);" id="${lastExistingWordStart}" onclick="jumptoTime()">${word}</a>`);
           }
         }
 

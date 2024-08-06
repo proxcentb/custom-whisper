@@ -7,7 +7,7 @@ from os.path import exists
 from json import load, dump
 from functools import wraps
 
-models_dir = '/.cache/'
+models_dir = './cache/'
 diarization_config_path = models_dir + 'pyannote/speaker-diarization-3.1.yaml'
 hf_token = ''
 # get it from here: https://huggingface.co/docs/hub/en/security-tokens

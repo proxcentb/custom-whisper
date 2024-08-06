@@ -1,3 +1,6 @@
 [submodule "whisperX"]
 	path = whisperX
 	url = git@github.com:m-bain/whisperX.git
+[submodule "whisper.cpp"]
+	path = whisper.cpp
+	url = git@github.com:proxcentb/whisper.cpp.git

@@ -35,11 +35,7 @@ if __name__ == "__main__":
     )
 
   if args['word_align']: 
-    word_align.word_align(
-      **word_align.process_args({
-        'filename': args['filename'],
-      })
-    )
+    word_align.word_align(filename = args['filename'])
 
   if args['diarize']: 
     diarize.diarize(
